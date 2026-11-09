@@ -40,7 +40,7 @@ update-desktop-database -q /usr/share/applications
 # Status text font for armada-splash (falls back to its embedded bitmap font
 # if this link dangles). Static face: stb_truetype renders a VF's default
 # instance only. Exact name: condensed faces sort first.
-splash_font="$(rpm -ql google-noto-sans-mono-fonts | grep -m1 '/NotoSansMono-SemiBold\.ttf$')"
+splash_font="$(rpm -ql google-noto-sans-mono-fonts | grep '/NotoSansMono-SemiBold\.ttf$' | sed -n '1p')"
 [ -n "${splash_font}" ]
 ln -sf "${splash_font}" /usr/share/armada/splash/font.ttf
 

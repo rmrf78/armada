@@ -157,11 +157,12 @@ build $target_image=image_name $tag=default_tag:
     fi
 
     podman build \
+        --network=host \
         --build-arg "ARMADA_VERSION=${ARMADA_VERSION}" \
         --build-arg-file "${REFS}" \
         "${SECRET_ARGS[@]}" \
         --platform linux/arm64 \
-        --pull=newer \
+        --pull=missing \
         --target armada-rootfs \
         --tag "${target_image}:${tag}" \
         .
@@ -242,7 +243,7 @@ _build-bib $target_image $tag $type $config: (_rootful_load_image target_image t
       --rm \
       "${tty_args[@]}" \
       --privileged \
-      --pull=newer \
+      --pull=missing \
       --net=host \
       --platform linux/arm64 \
       --security-opt label=type:unconfined_t \
@@ -329,7 +330,7 @@ _run-vm $target_image $tag $type $config:
 
     run_args=()
     run_args+=(--rm --privileged)
-    run_args+=(--pull=newer)
+    run_args+=(--pull=missing)
     run_args+=(--publish "127.0.0.1:${port}:8006")
     run_args+=(--env "CPU_CORES=4")
     run_args+=(--env "RAM_SIZE=8G")

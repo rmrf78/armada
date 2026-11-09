@@ -1,12 +1,12 @@
 [Unit]
-Description=Reset session autologin to gamemode each boot
+Description=Reset session autologin to KDE desktop each boot
 Before=display-manager.service
 After=systemd-tmpfiles-setup.service
 
 [Service]
 Type=oneshot
 RemainAfterExit=yes
-ExecStart=/usr/libexec/armada/session-control default-gamemode
+ExecStart=/usr/libexec/armada/session-control default-desktop
 StandardOutput=journal
 StandardError=journal
 

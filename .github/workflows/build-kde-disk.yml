@@ -1,0 +1,68 @@
+name: Build KDE disk image
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: read
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+
+      - name: Install tools
+        run: |
+          set -euxo pipefail
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            podman buildah jq skopeo just systemd-container
+          sudo git config --global --add safe.directory "${GITHUB_WORKSPACE}"
+
+      - name: Download our kernel
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euxo pipefail
+          mkdir -p /tmp/kernelpkg
+          gh release download kernel-7.2.6 \
+            --repo "${{ github.repository }}" \
+            --pattern 'armada-kernel-7.2.6.tar.zst*' \
+            --dir /tmp/kernelpkg
+          ls -lh /tmp/kernelpkg
+
+      - name: Tag kernel as a package image
+        run: |
+          set -euxo pipefail
+          HASH="$(bash packages/package-hash.sh kernel)"
+          cat >/tmp/kernelpkg/Containerfile <<'INNER'
+          FROM scratch
+          COPY armada-kernel-7.2.6.tar.zst armada-kernel-7.2.6.tar.zst.sha256 /kernel/
+          INNER
+          sudo podman build -t "localhost/armada/pkg/kernel:${HASH}" /tmp/kernelpkg
+
+      - name: Build rootfs
+        run: |
+          set -euxo pipefail
+          sudo env PATH="$PATH" just build
+
+      - name: Build raw disk
+        run: |
+          set -euxo pipefail
+          sudo env PATH="$PATH" just build-armada-image
+          sudo chown -R "$(id -u):$(id -g)" output
+          ls -lh output
+
+      - name: Upload disk
+        uses: actions/upload-artifact@v4
+        with:
+          name: armada-kde-disk
+          path: |
+            output/armada-*.img.gz
+            output/armada-*.img.gz.sha256
+          if-no-files-found: error
+          retention-days: 7
+          compression-level: 0
