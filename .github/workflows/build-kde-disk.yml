@@ -19,8 +19,11 @@ jobs:
           set -euxo pipefail
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
-            podman buildah jq skopeo just systemd-container
+            podman buildah jq skopeo systemd-container
           sudo git config --global --add safe.directory "${GITHUB_WORKSPACE}"
+
+      - name: Install just
+        uses: ublue-os/just-action@30ab4659369934b65b655bf8d2fa4ddd6547d384 # v3
 
       - name: Download our kernel
         env:
